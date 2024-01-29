@@ -140,9 +140,19 @@ describe("MetaStockToken", function () {
     expect(lockStateList[2][1]).to.equal(BigInt(130 * 10 ** 6));
     expect(lockStateList[3][0]).to.equal(blockTime3 + 1000n);
     expect(lockStateList[3][1]).to.equal(BigInt(200 * 10 ** 6));
-
     // * 토큰 투표 검증
-    // ? 투표실행
+    // ? 투표정보 갱신
+    const blockTime4 = await instance.showTime();
+    await instance
+      .connect(initialOwner)
+      .updateVoteInfo(1, 1 * 10 ** 6, 60 * 60 * 24 * 3, 4, blockTime4);
+    const voteInfo = await instance.getVoteInfo();
+    expect(voteInfo[0]).to.equal(1);
+    expect(voteInfo[1]).to.equal(1 * 10 ** 6);
+    expect(voteInfo[2]).to.equal(60 * 60 * 24 * 3);
+    expect(voteInfo[3]).to.equal(4);
+    expect(voteInfo[4]).to.equal(blockTime4);
+
     // ? 투표결과 확인
   });
 });

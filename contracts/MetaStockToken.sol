@@ -24,6 +24,16 @@ contract MetaStockToken is
     event Lock(address indexed holder, uint256 value, uint256 releaseTime);
     event Unlock(address indexed holder, uint256 value);
 
+    struct VoteInfo {
+        uint256 proposalId;
+        uint256 threshold;
+        uint256 period;
+        uint256 quorum;
+        uint256 endDate;
+    }
+
+    VoteInfo private voteInfo;
+
     constructor(
         address initialOwner
     )
@@ -46,12 +56,22 @@ contract MetaStockToken is
         _mint(to, amount);
     }
 
-    function lock(
-        address holder,
-        uint256 value,
-        uint256 releaseTime
+    function updateVoteInfo(
+        uint256 proposalId,
+        uint256 threshold,
+        uint256 period,
+        uint256 quorum,
+        uint256 endDate
     ) public onlyOwner {
-        _lock(holder, value, releaseTime);
+        voteInfo.proposalId = proposalId;
+        voteInfo.threshold = threshold;
+        voteInfo.period = period;
+        voteInfo.quorum = quorum;
+        voteInfo.endDate = endDate;
+    }
+
+    function getVoteInfo() public view returns (VoteInfo memory) {
+        return voteInfo;
     }
 
     function _lock(
@@ -69,6 +89,14 @@ contract MetaStockToken is
         _update(holder, address(0), value);
         lockInfo[holder].push(LockInfo(releaseTime, value));
         emit Lock(holder, value, releaseTime);
+    }
+
+    function lock(
+        address holder,
+        uint256 value,
+        uint256 releaseTime
+    ) public onlyOwner {
+        _lock(holder, value, releaseTime);
     }
 
     function unlock(address holder, uint256 i) public onlyOwner {
