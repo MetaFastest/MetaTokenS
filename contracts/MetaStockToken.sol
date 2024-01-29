@@ -93,10 +93,9 @@ contract MetaStockToken is
         }
     }
 
-    function releaseLocks() public returns (bool) {
+    function releaseLocks() public {
         address holder = _msgSender();
         _releaseLock(holder);
-        return true;
     }
 
     function lockCount(address holder) public view returns (uint256) {
