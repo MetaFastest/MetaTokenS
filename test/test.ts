@@ -154,7 +154,6 @@ describe("MetaStockToken", function () {
 
     // uint256 proposalId,  // 투표 아이디
     // uint256 threshold,   // 최소 투표가능 토큰량
-    // uint256 period,      // 1회 투표 후 다음 투표 가능 시점까지의 기간
     // uint256 quorum,      // 정족수%
     // uint256 endDate      // 투표 종료 시점
     // ? 투표하기
