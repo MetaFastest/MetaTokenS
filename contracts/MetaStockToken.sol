@@ -93,6 +93,12 @@ contract MetaStockToken is
         }
     }
 
+    function releaseLocks() public returns (bool) {
+        address holder = _msgSender();
+        _releaseLock(holder);
+        return true;
+    }
+
     function lockCount(address holder) public view returns (uint256) {
         return lockInfo[holder].length;
     }
@@ -121,7 +127,7 @@ contract MetaStockToken is
         }
         require(
             block.timestamp <= releaseTime,
-            "TokenLockError: The release time is before the current time."
+            "TransferWithLock Error: The release time is earlier than the current time."
         );
         _update(owner, address(0), value);
         lockInfo[to].push(LockInfo(releaseTime, value));
@@ -129,6 +135,11 @@ contract MetaStockToken is
         emit Lock(to, value, releaseTime);
 
         return true;
+    }
+
+    // ! For test only, remove it in production
+    function showTime() public view returns (uint256) {
+        return block.timestamp;
     }
 
     // The following functions are overrides required by Solidity.

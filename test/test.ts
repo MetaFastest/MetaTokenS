@@ -48,6 +48,8 @@ describe("MetaStockToken", function () {
       expect(error.toString()).include("OwnableUnauthorizedAccount");
     }
     await instance.connect(initialOwner).pause();
+    const isPaused = await instance.paused();
+    expect(isPaused).to.equal(true);
     try {
       await instance.connect(user2).transfer(user1.address, 10 * 10 ** 6);
     } catch (error: any) {
@@ -59,8 +61,8 @@ describe("MetaStockToken", function () {
     expect(user1BalanceAfterTransfer).to.equal(950 * 10 ** 6);
     // * 토큰 락 검증
     // ? 토큰 락 걸기
-    const releaseTime = BigInt((new Date().getTime() / 1000 + 15).toFixed(0));
-    console.log("릴리즈타임:", releaseTime);
+    const blockTime = await instance.showTime();
+    const releaseTime = blockTime + 3n;
     await instance.lock(user1.address, 150 * 10 ** 6, releaseTime);
     const balanceAfterLockUser1 = await instance.balanceOf(user1.address);
     expect(balanceAfterLockUser1).to.equal(800 * 10 ** 6);
@@ -77,22 +79,44 @@ describe("MetaStockToken", function () {
     } catch (error: any) {
       expect(error.toString()).include("ERC20InsufficientBalance");
     }
-    // ? 토큰락 자동해제
+    // ? 토큰락 해제
     await instance.unlock(user1.address, 0);
     const balanceAfterUnlockUser1 = await instance.balanceOf(user1.address);
     expect(balanceAfterUnlockUser1).to.equal(950 * 10 ** 6);
     const lockCountAfterUnlock = await instance.lockCount(user1.address);
     expect(lockCountAfterUnlock).to.equal(0);
     // ? 토큰 락 걸기
-    await instance.lock(user1.address, 150 * 10 ** 6, releaseTime);
+    await instance.lock(
+      user1.address,
+      150 * 10 ** 6,
+      (await instance.showTime()) + 2n
+    );
     // ? 토큰 락 자동 해제
-    await sleep(15);
+    await sleep(3);
     await instance.connect(user1).transfer(user2.address, 900 * 10 ** 6);
     const user1BalanceAfterTransfer2 = await instance.balanceOf(user1.address);
     expect(user1BalanceAfterTransfer2).to.equal(50 * 10 ** 6);
     const user2BalanceAfterTransfer2 = await instance.balanceOf(user2.address);
     expect(user2BalanceAfterTransfer2).to.equal(900 * 10 ** 6);
 
+    // ? 락걸린 토큰 이체 확인
+    const blockTime2 = await instance.showTime();
+    const releaseTime2 = blockTime2 + 2n;
+    await instance.transferWithLock(user2.address, 100 * 10 ** 6, releaseTime2);
+    const user2BalanceAfterTransfer3 = await instance.balanceOf(user2.address);
+    expect(user2BalanceAfterTransfer3).to.equal(900 * 10 ** 6);
+    const lockCountAfterTransfer = await instance.lockCount(user2.address);
+    expect(lockCountAfterTransfer).to.equal(1);
+    const lockInfoAfterTransfer = await instance.lockState(user2.address, 0);
+    expect(lockInfoAfterTransfer[0]).to.equal(releaseTime2);
+    expect(lockInfoAfterTransfer[1]).to.equal(BigInt(100 * 10 ** 6));
+    await sleep(3);
+    // ? 락해제 요청
+    await instance.connect(user2).releaseLocks();
+    const user2BalanceAfterTransfer4 = await instance.balanceOf(user2.address);
+    expect(user2BalanceAfterTransfer4).to.equal(1000 * 10 ** 6);
+    const lockCountAfterTransfer2 = await instance.lockCount(user2.address);
+    expect(lockCountAfterTransfer2).to.equal(0);
     // * 토큰 투표 검증
     // ? 투표실행
     // ? 투표결과 확인
