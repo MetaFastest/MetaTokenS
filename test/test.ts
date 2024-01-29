@@ -92,5 +92,9 @@ describe("MetaStockToken", function () {
     expect(user1BalanceAfterTransfer2).to.equal(50 * 10 ** 6);
     const user2BalanceAfterTransfer2 = await instance.balanceOf(user2.address);
     expect(user2BalanceAfterTransfer2).to.equal(900 * 10 ** 6);
+
+    // * 토큰 투표 검증
+    // ? 투표실행
+    // ? 투표결과 확인
   });
 });
