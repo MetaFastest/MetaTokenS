@@ -48,29 +48,23 @@ contract MetaStockToken is
 
     function lock(
         address holder,
-        uint256 amount,
+        uint256 value,
         uint256 releaseTime
     ) public onlyOwner {
-        require(balanceOf(holder) >= amount, "Balance is too small.");
+        if (balanceOf(holder) < value) {
+            revert ERC20InsufficientBalance(holder, balanceOf(holder), value);
+        }
         require(
             block.timestamp <= releaseTime,
-            "TokenTimelock: release time is before current time"
+            "Lock Error: The release time is earlier than the current time."
         );
-
-        // _balances[holder] = _balances[holder].sub(amount);
-        // super._burn(holder, amount)
-        _update(holder, address(0), amount);
-        lockInfo[holder].push(LockInfo(releaseTime, amount));
-        emit Lock(holder, amount, releaseTime);
+        _update(holder, address(0), value);
+        lockInfo[holder].push(LockInfo(releaseTime, value));
+        emit Lock(holder, value, releaseTime);
     }
 
     function unlock(address holder, uint256 i) public onlyOwner {
         require(i < lockInfo[holder].length, "Locked balance does not exists.");
-
-        // _balances[holder] = _balances[holder].add(
-        //     lockInfo[holder][i].balance
-        // );
-        // super._mint(holder, lockInfo[holder][i].balance)
         _update(address(0), holder, lockInfo[holder][i].balance);
         emit Unlock(holder, lockInfo[holder][i].balance);
         lockInfo[holder][i].balance = 0;
@@ -78,16 +72,12 @@ contract MetaStockToken is
         if (i != lockInfo[holder].length - 1) {
             lockInfo[holder][i] = lockInfo[holder][lockInfo[holder].length - 1];
         }
-        // lockInfo[holder].length--;
         lockInfo[holder].pop();
     }
 
     function _releaseLock(address holder) internal {
         for (uint256 i = 0; i < lockInfo[holder].length; i++) {
             if (lockInfo[holder][i].releaseTime <= block.timestamp) {
-                // _balances[holder] = _balances[holder].add(
-                //     lockInfo[holder][i].balance
-                // );
                 _update(address(0), holder, lockInfo[holder][i].balance);
                 emit Unlock(holder, lockInfo[holder][i].balance);
                 lockInfo[holder][i].balance = 0;
@@ -98,7 +88,6 @@ contract MetaStockToken is
                     ];
                     i--;
                 }
-                // lockInfo[holder].length--;
                 lockInfo[holder].pop();
             }
         }
@@ -130,14 +119,10 @@ contract MetaStockToken is
         if (balanceOf(owner) < value) {
             revert ERC20InsufficientBalance(owner, balanceOf(owner), value);
         }
-
-        // require(value <= balanceOf(owner), "Not enough balance");
         require(
             block.timestamp <= releaseTime,
             "TokenLockError: The release time is before the current time."
         );
-
-        // _balances[owner] = _balances[owner].sub(_value);
         _update(owner, address(0), value);
         lockInfo[to].push(LockInfo(releaseTime, value));
         emit Transfer(owner, to, value);

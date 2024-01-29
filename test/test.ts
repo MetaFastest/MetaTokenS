@@ -1,6 +1,10 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
 
+async function sleep(seconds: number) {
+  return new Promise((resolve) => setTimeout(resolve, seconds * 1000));
+}
+
 describe("MetaStockToken", function () {
   it("Test contract", async function () {
     const ContractFactory = await ethers.getContractFactory("MetaStockToken");
@@ -12,6 +16,9 @@ describe("MetaStockToken", function () {
 
     const instance = await ContractFactory.deploy(initialOwner);
     await instance.waitForDeployment();
+
+    console.log("user1:", user1.address);
+    console.log("user2:", user2.address);
 
     // * 토큰명 검증
     expect(await instance.name()).to.equal("Meta Stock Token");
@@ -51,5 +58,31 @@ describe("MetaStockToken", function () {
     const user1BalanceAfterTransfer = await instance.balanceOf(user1.address);
     expect(user1BalanceAfterTransfer).to.equal(950 * 10 ** 6);
     // * 토큰 락 검증
+    // ? 토큰 락 걸기
+    const releaseTime = BigInt((new Date().getTime() / 1000 + 15).toFixed(0));
+    console.log("릴리즈타임:", releaseTime);
+    await instance.lock(user1.address, 150 * 10 ** 6, releaseTime);
+    const balanceAfterLockUser1 = await instance.balanceOf(user1.address);
+    expect(balanceAfterLockUser1).to.equal(800 * 10 ** 6);
+    // ? 토큰 락 카운트 확인
+    const lockCount = await instance.lockCount(user1.address);
+    expect(lockCount).to.equal(1);
+    // ? 토큰 락 정보 확인
+    const lockInfo = await instance.lockState(user1.address, 0);
+    expect(lockInfo[0]).to.equal(releaseTime);
+    expect(lockInfo[1]).to.equal(BigInt(150 * 10 ** 6));
+    // ? 토큰 이체
+    try {
+      await instance.connect(user1).transfer(user2.address, 900 * 10 ** 6);
+    } catch (error: any) {
+      expect(error.toString()).include("ERC20InsufficientBalance");
+    }
+    // ? 토큰 락 자동 해제
+    await sleep(15);
+    await instance.connect(user1).transfer(user2.address, 900 * 10 ** 6);
+    const user1BalanceAfterTransfer2 = await instance.balanceOf(user1.address);
+    expect(user1BalanceAfterTransfer2).to.equal(50 * 10 ** 6);
+    const user2BalanceAfterTransfer2 = await instance.balanceOf(user2.address);
+    expect(user2BalanceAfterTransfer2).to.equal(900 * 10 ** 6);
   });
 });
