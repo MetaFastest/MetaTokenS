@@ -117,6 +117,30 @@ describe("MetaStockToken", function () {
     expect(user2BalanceAfterTransfer4).to.equal(1000 * 10 ** 6);
     const lockCountAfterTransfer2 = await instance.lockCount(user2.address);
     expect(lockCountAfterTransfer2).to.equal(0);
+    // * LockStateList 검증
+    const blockTime3 = await instance.showTime();
+    await instance
+      .connect(initialOwner)
+      .lock(user2.address, 100 * 10 ** 6, blockTime3 + 1000n);
+    await instance
+      .connect(initialOwner)
+      .lock(user2.address, 110 * 10 ** 6, blockTime3 + 1000n);
+    await instance
+      .connect(initialOwner)
+      .lock(user2.address, 130 * 10 ** 6, blockTime3 + 1000n);
+    await instance
+      .connect(initialOwner)
+      .lock(user2.address, 200 * 10 ** 6, blockTime3 + 1000n);
+    const lockStateList = await instance.lockStateList(user2.address);
+    expect(lockStateList[0][0]).to.equal(blockTime3 + 1000n);
+    expect(lockStateList[0][1]).to.equal(BigInt(100 * 10 ** 6));
+    expect(lockStateList[1][0]).to.equal(blockTime3 + 1000n);
+    expect(lockStateList[1][1]).to.equal(BigInt(110 * 10 ** 6));
+    expect(lockStateList[2][0]).to.equal(blockTime3 + 1000n);
+    expect(lockStateList[2][1]).to.equal(BigInt(130 * 10 ** 6));
+    expect(lockStateList[3][0]).to.equal(blockTime3 + 1000n);
+    expect(lockStateList[3][1]).to.equal(BigInt(200 * 10 ** 6));
+
     // * 토큰 투표 검증
     // ? 투표실행
     // ? 투표결과 확인

@@ -51,6 +51,14 @@ contract MetaStockToken is
         uint256 value,
         uint256 releaseTime
     ) public onlyOwner {
+        _lock(holder, value, releaseTime);
+    }
+
+    function _lock(
+        address holder,
+        uint256 value,
+        uint256 releaseTime
+    ) internal {
         if (balanceOf(holder) < value) {
             revert ERC20InsufficientBalance(holder, balanceOf(holder), value);
         }
@@ -112,6 +120,12 @@ contract MetaStockToken is
         );
     }
 
+    function lockStateList(
+        address holder
+    ) public view returns (LockInfo[] memory) {
+        return lockInfo[holder];
+    }
+
     function transferWithLock(
         address to,
         uint256 value,
@@ -171,5 +185,9 @@ contract MetaStockToken is
     ) public override returns (bool) {
         _releaseLock(from);
         return super.transferFrom(from, to, value);
+    }
+
+    function vote(uint256 value) public {
+        address holder = _msgSender();
     }
 }
