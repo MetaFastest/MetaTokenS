@@ -50,5 +50,6 @@ describe("MetaStockToken", function () {
     await instance.connect(user2).transfer(user1.address, 50 * 10 ** 6);
     const user1BalanceAfterTransfer = await instance.balanceOf(user1.address);
     expect(user1BalanceAfterTransfer).to.equal(950 * 10 ** 6);
+    // * 토큰 락 검증
   });
 });
