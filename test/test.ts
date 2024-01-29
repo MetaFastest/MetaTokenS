@@ -142,17 +142,46 @@ describe("MetaStockToken", function () {
     expect(lockStateList[3][1]).to.equal(BigInt(200 * 10 ** 6));
     // * 토큰 투표 검증
     // ? 투표정보 갱신
-    const blockTime4 = await instance.showTime();
+    const blockTime4 = (await instance.showTime()) + 1000n;
     await instance
       .connect(initialOwner)
-      .updateVoteInfo(1, 1 * 10 ** 6, 60 * 60 * 24 * 3, 4, blockTime4);
+      .updateVoteInfo(1, 1 * 10 ** 6, 4, blockTime4);
     const voteInfo = await instance.getVoteInfo();
     expect(voteInfo[0]).to.equal(1);
     expect(voteInfo[1]).to.equal(1 * 10 ** 6);
-    expect(voteInfo[2]).to.equal(60 * 60 * 24 * 3);
-    expect(voteInfo[3]).to.equal(4);
-    expect(voteInfo[4]).to.equal(blockTime4);
+    expect(voteInfo[2]).to.equal(4);
+    expect(voteInfo[3]).to.equal(blockTime4);
 
+    // uint256 proposalId,  // 투표 아이디
+    // uint256 threshold,   // 최소 투표가능 토큰량
+    // uint256 period,      // 1회 투표 후 다음 투표 가능 시점까지의 기간
+    // uint256 quorum,      // 정족수%
+    // uint256 endDate      // 투표 종료 시점
+    // ? 투표하기
+
+    try {
+      await instance.connect(user2).vote(1, 0.5 * 10 ** 6, 0);
+    } catch (error: any) {
+      expect(error.toString()).include("threshold");
+    }
+
+    try {
+      await instance.connect(user2).vote(3, 10 * 10 ** 6, 0);
+    } catch (error: any) {
+      expect(error.toString()).include("proposalId");
+    }
+
+    try {
+      await instance.connect(user2).vote(1, 10 * 10 ** 6, -1);
+    } catch (error: any) {
+      expect(error.toString()).include("option");
+    }
+
+    await instance.connect(user2).vote(1, 10 * 10 ** 6, 0);
+
+    const voteHistory = await instance.connect(user2).getVoteHistory(1, 0);
+    expect(voteHistory[0]).to.equal(0);
+    expect(voteHistory[1]).to.equal(10 * 10 ** 6);
     // ? 투표결과 확인
   });
 });

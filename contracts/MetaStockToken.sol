@@ -27,12 +27,26 @@ contract MetaStockToken is
     struct VoteInfo {
         uint256 proposalId;
         uint256 threshold;
-        uint256 period;
         uint256 quorum;
         uint256 endDate;
     }
 
     VoteInfo private voteInfo;
+
+    struct VoteHistory {
+        uint256 option;
+        uint256 value;
+        uint256 timestamp;
+    }
+
+    mapping(uint256 => mapping(address => VoteHistory[])) internal voteHistory;
+
+    event Vote(
+        address indexed voter,
+        uint256 proposalId,
+        uint256 option,
+        uint256 value
+    );
 
     constructor(
         address initialOwner
@@ -59,19 +73,58 @@ contract MetaStockToken is
     function updateVoteInfo(
         uint256 proposalId,
         uint256 threshold,
-        uint256 period,
         uint256 quorum,
         uint256 endDate
     ) public onlyOwner {
         voteInfo.proposalId = proposalId;
         voteInfo.threshold = threshold;
-        voteInfo.period = period;
         voteInfo.quorum = quorum;
         voteInfo.endDate = endDate;
     }
 
     function getVoteInfo() public view returns (VoteInfo memory) {
         return voteInfo;
+    }
+
+    function vote(uint256 proposalId, uint256 value, uint256 option) public {
+        require(
+            voteInfo.proposalId == proposalId,
+            "Vote Error: The proposalId is not matched."
+        );
+        require(
+            value >= voteInfo.threshold,
+            "Vote Error: The value is less than the threshold."
+        );
+        require(
+            block.timestamp <= voteInfo.endDate,
+            "Vote Error: The current vote period is over."
+        );
+        require(option >= 0, "Vote Error: The option is invalid.");
+
+        address holder = _msgSender();
+
+        voteHistory[proposalId][holder].push(
+            VoteHistory(option, value, block.timestamp)
+        );
+
+        emit Vote(holder, proposalId, option, value);
+
+        _lock(holder, value, voteInfo.endDate);
+    }
+
+    function getVoteHistory(
+        uint256 proposalId,
+        uint256 idx
+    ) public view returns (VoteHistory memory) {
+        address holder = _msgSender();
+        return voteHistory[proposalId][holder][idx];
+    }
+
+    function getVoteHistoryList(
+        uint256 proposalId
+    ) public view returns (VoteHistory[] memory) {
+        address holder = _msgSender();
+        return voteHistory[proposalId][holder];
     }
 
     function _lock(
@@ -213,9 +266,5 @@ contract MetaStockToken is
     ) public override returns (bool) {
         _releaseLock(from);
         return super.transferFrom(from, to, value);
-    }
-
-    function vote(uint256 value) public {
-        address holder = _msgSender();
     }
 }
