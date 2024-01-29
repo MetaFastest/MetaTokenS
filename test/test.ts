@@ -77,6 +77,14 @@ describe("MetaStockToken", function () {
     } catch (error: any) {
       expect(error.toString()).include("ERC20InsufficientBalance");
     }
+    // ? 토큰락 자동해제
+    await instance.unlock(user1.address, 0);
+    const balanceAfterUnlockUser1 = await instance.balanceOf(user1.address);
+    expect(balanceAfterUnlockUser1).to.equal(950 * 10 ** 6);
+    const lockCountAfterUnlock = await instance.lockCount(user1.address);
+    expect(lockCountAfterUnlock).to.equal(0);
+    // ? 토큰 락 걸기
+    await instance.lock(user1.address, 150 * 10 ** 6, releaseTime);
     // ? 토큰 락 자동 해제
     await sleep(15);
     await instance.connect(user1).transfer(user2.address, 900 * 10 ** 6);
