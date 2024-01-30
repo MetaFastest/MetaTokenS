@@ -157,7 +157,6 @@ describe("MetaStockToken", function () {
     // uint256 quorum,      // 정족수%
     // uint256 endDate      // 투표 종료 시점
     // ? 투표하기
-
     try {
       await instance.connect(user2).vote(1, 0.5 * 10 ** 6, 0);
     } catch (error: any) {
@@ -177,10 +176,19 @@ describe("MetaStockToken", function () {
     }
 
     await instance.connect(user2).vote(1, 10 * 10 ** 6, 0);
+    await instance.connect(user2).vote(1, 100 * 10 ** 6, 1);
 
     const voteHistory = await instance.connect(user2).getVoteHistory(1, 0);
+    const voteHistory2 = await instance.connect(user2).getVoteHistory(1, 1);
     expect(voteHistory[0]).to.equal(0);
     expect(voteHistory[1]).to.equal(10 * 10 ** 6);
+    expect(voteHistory2[0]).to.equal(1);
+    expect(voteHistory2[1]).to.equal(100 * 10 ** 6);
+    const voteHistoryList = await instance.connect(user2).getVoteHistoryList(1);
     // ? 투표결과 확인
+    expect(voteHistoryList[0][0]).to.equal(0);
+    expect(voteHistoryList[0][1]).to.equal(10 * 10 ** 6);
+    expect(voteHistoryList[1][0]).to.equal(1);
+    expect(voteHistoryList[1][1]).to.equal(100 * 10 ** 6);
   });
 });

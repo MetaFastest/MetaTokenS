@@ -43,8 +43,8 @@ contract MetaStockToken is
 
     event Vote(
         address indexed voter,
-        uint256 proposalId,
-        uint256 option,
+        uint256 indexed proposalId,
+        uint256 indexed option,
         uint256 value
     );
 
@@ -229,11 +229,6 @@ contract MetaStockToken is
         emit Lock(to, value, releaseTime);
 
         return true;
-    }
-
-    // ! For test only, remove it in production
-    function showTime() public view returns (uint256) {
-        return block.timestamp;
     }
 
     // The following functions are overrides required by Solidity.
