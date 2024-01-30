@@ -61,8 +61,8 @@ describe("MetaStockToken", function () {
     expect(user1BalanceAfterTransfer).to.equal(950 * 10 ** 6);
     // * 토큰 락 검증
     // ? 토큰 락 걸기
-    const blockTime = await instance.showTime();
-    const releaseTime = blockTime + 3n;
+    const blockTime = BigInt((new Date().getTime() / 1000).toFixed(0));
+    const releaseTime = blockTime + 15n;
     await instance.lock(user1.address, 150 * 10 ** 6, releaseTime);
     const balanceAfterLockUser1 = await instance.balanceOf(user1.address);
     expect(balanceAfterLockUser1).to.equal(800 * 10 ** 6);
@@ -86,13 +86,9 @@ describe("MetaStockToken", function () {
     const lockCountAfterUnlock = await instance.lockCount(user1.address);
     expect(lockCountAfterUnlock).to.equal(0);
     // ? 토큰 락 걸기
-    await instance.lock(
-      user1.address,
-      150 * 10 ** 6,
-      (await instance.showTime()) + 2n
-    );
+    await instance.lock(user1.address, 150 * 10 ** 6, blockTime + 12n);
     // ? 토큰 락 자동 해제
-    await sleep(3);
+    await sleep(15);
     await instance.connect(user1).transfer(user2.address, 900 * 10 ** 6);
     const user1BalanceAfterTransfer2 = await instance.balanceOf(user1.address);
     expect(user1BalanceAfterTransfer2).to.equal(50 * 10 ** 6);
@@ -100,8 +96,8 @@ describe("MetaStockToken", function () {
     expect(user2BalanceAfterTransfer2).to.equal(900 * 10 ** 6);
 
     // ? 락걸린 토큰 이체 확인
-    const blockTime2 = await instance.showTime();
-    const releaseTime2 = blockTime2 + 2n;
+    const blockTime2 = BigInt((new Date().getTime() / 1000).toFixed(0));
+    const releaseTime2 = blockTime2 + 15n;
     await instance.transferWithLock(user2.address, 100 * 10 ** 6, releaseTime2);
     const user2BalanceAfterTransfer3 = await instance.balanceOf(user2.address);
     expect(user2BalanceAfterTransfer3).to.equal(900 * 10 ** 6);
@@ -110,7 +106,7 @@ describe("MetaStockToken", function () {
     const lockInfoAfterTransfer = await instance.lockState(user2.address, 0);
     expect(lockInfoAfterTransfer[0]).to.equal(releaseTime2);
     expect(lockInfoAfterTransfer[1]).to.equal(BigInt(100 * 10 ** 6));
-    await sleep(3);
+    await sleep(15);
     // ? 락해제 요청
     await instance.connect(user2).releaseLocks();
     const user2BalanceAfterTransfer4 = await instance.balanceOf(user2.address);
@@ -118,7 +114,7 @@ describe("MetaStockToken", function () {
     const lockCountAfterTransfer2 = await instance.lockCount(user2.address);
     expect(lockCountAfterTransfer2).to.equal(0);
     // * LockStateList 검증
-    const blockTime3 = await instance.showTime();
+    const blockTime3 = BigInt((new Date().getTime() / 1000).toFixed(0));
     await instance
       .connect(initialOwner)
       .lock(user2.address, 100 * 10 ** 6, blockTime3 + 1000n);
@@ -142,7 +138,7 @@ describe("MetaStockToken", function () {
     expect(lockStateList[3][1]).to.equal(BigInt(200 * 10 ** 6));
     // * 토큰 투표 검증
     // ? 투표정보 갱신
-    const blockTime4 = (await instance.showTime()) + 1000n;
+    const blockTime4 = BigInt((new Date().getTime() / 1000).toFixed(0)) + 1000n;
     await instance
       .connect(initialOwner)
       .updateVoteInfo(1, 1 * 10 ** 6, 4, blockTime4);
