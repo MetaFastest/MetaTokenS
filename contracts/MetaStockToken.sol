@@ -6,13 +6,15 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 contract MetaStockToken is
     ERC20,
     ERC20Burnable,
     ERC20Pausable,
     Ownable,
-    ERC20Permit
+    ERC20Permit,
+    ReentrancyGuard
 {
     struct LockInfo {
         uint256 releaseTime;
@@ -88,7 +90,11 @@ contract MetaStockToken is
         return voteInfo;
     }
 
-    function vote(uint256 proposalId, uint256 value, uint256 option) public {
+    function vote(
+        uint256 proposalId,
+        uint256 value,
+        uint256 option
+    ) public nonReentrant {
         require(
             voteInfo.proposalId == proposalId,
             "Vote Error: The proposalId is not matched."
@@ -158,11 +164,11 @@ contract MetaStockToken is
         address holder,
         uint256 value,
         uint256 releaseTime
-    ) public onlyOwner {
+    ) public nonReentrant onlyOwner {
         _lock(holder, value, releaseTime);
     }
 
-    function unlock(address holder, uint256 i) public onlyOwner {
+    function unlock(address holder, uint256 i) public nonReentrant onlyOwner {
         require(i < lockInfo[holder].length, "Locked balance does not exists.");
         _update(address(0), holder, lockInfo[holder][i].balance);
         emit Unlock(holder, lockInfo[holder][i].balance);
@@ -192,7 +198,7 @@ contract MetaStockToken is
         }
     }
 
-    function releaseLocks() public {
+    function releaseLocks() public nonReentrant {
         address holder = _msgSender();
         _releaseLock(holder);
     }
@@ -258,7 +264,7 @@ contract MetaStockToken is
     function transfer(
         address to,
         uint256 value
-    ) public override returns (bool) {
+    ) public override nonReentrant returns (bool) {
         address holder = _msgSender();
         _releaseLock(holder);
         return super.transfer(to, value);
@@ -268,7 +274,7 @@ contract MetaStockToken is
         address from,
         address to,
         uint256 value
-    ) public override returns (bool) {
+    ) public override nonReentrant returns (bool) {
         _releaseLock(from);
         return super.transferFrom(from, to, value);
     }
