@@ -229,16 +229,22 @@ contract MetaStockToken is
         uint256 releaseTime
     ) public onlyOwner returns (bool) {
         address owner = _msgSender();
-        if (to == address(0)) {
-            revert ERC20InvalidReceiver(address(0));
-        }
-        if (balanceOf(owner) < value) {
-            revert ERC20InsufficientBalance(owner, balanceOf(owner), value);
-        }
+        require(to != address(0), "ERC20: transfer to the zero address");
+        require(value > 0, "ERC20: transfer value should be greater than 0");
+        require(
+            balanceOf(_msgSender()) >= value,
+            "ERC20: insufficient balance"
+        );
         require(
             block.timestamp <= releaseTime,
             "TransferWithLock Error: The release time is earlier than the current time."
         );
+        require(lockInfo[to].length + 1 > lockInfo[to].length, "Lock overflow");
+        require(
+            lockInfo[to].length < MAX_LOCK_COUNT,
+            "Exceeded max lock count"
+        );
+
         _update(owner, address(0), value);
         lockInfo[to].push(LockInfo(releaseTime, value));
         emit Transfer(owner, to, value);
