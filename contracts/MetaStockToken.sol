@@ -19,6 +19,8 @@ contract MetaStockToken is
         uint256 balance;
     }
 
+    uint256 public constant MAX_LOCK_COUNT = 50;
+
     mapping(address => LockInfo[]) internal lockInfo;
 
     event Lock(address indexed holder, uint256 value, uint256 releaseTime);
@@ -132,13 +134,21 @@ contract MetaStockToken is
         uint256 value,
         uint256 releaseTime
     ) internal {
-        if (balanceOf(holder) < value) {
-            revert ERC20InsufficientBalance(holder, balanceOf(holder), value);
-        }
+        require(
+            lockInfo[holder].length < MAX_LOCK_COUNT,
+            "Exceeded max lock count"
+        );
         require(
             block.timestamp <= releaseTime,
             "Lock Error: The release time is earlier than the current time."
         );
+        require(
+            lockInfo[holder].length + 1 > lockInfo[holder].length,
+            "Lock overflow"
+        );
+        if (balanceOf(holder) < value) {
+            revert ERC20InsufficientBalance(holder, balanceOf(holder), value);
+        }
         _update(holder, address(0), value);
         lockInfo[holder].push(LockInfo(releaseTime, value));
         emit Lock(holder, value, releaseTime);
