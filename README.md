@@ -22,6 +22,8 @@ The repository contains a single contract, `MetaStockToken`, together with an in
 
 Contract source: [`contracts/MetaStockToken.sol`](contracts/MetaStockToken.sol)
 
+Inherits: `ERC20` · `ERC20Burnable` · `ERC20Pausable` · `Ownable` · `ERC20Permit` · `ReentrancyGuard`
+
 ## Deployment
 
 | Network | Address |
@@ -29,8 +31,6 @@ Contract source: [`contracts/MetaStockToken.sol`](contracts/MetaStockToken.sol)
 | TRON Mainnet | [`TVyffgHzP9foW76mGjSDj713D1vuGh16T6`](https://tronscan.org/#/token20/TVyffgHzP9foW76mGjSDj713D1vuGh16T6/code) |
 
 The source verified on Tronscan for this address is identical to `contracts/MetaStockToken.sol` in this repository (compiled with Solidity 0.8.20, optimizer enabled, OpenZeppelin Contracts 5.0.1).
-
-Inherits: `ERC20` · `ERC20Burnable` · `ERC20Pausable` · `Ownable` · `ERC20Permit` · `ReentrancyGuard`
 
 ---
 
@@ -158,7 +158,7 @@ Keep secrets in `.env`. It is already listed in `.gitignore`.
 - **Locks temporarily reduce `totalSupply`.** Internally, locking moves tokens to `address(0)` and releasing mints them back. While tokens are locked, `totalSupply()` is lower by that amount, and a `Transfer(holder, 0x0)` event fires on lock and `Transfer(0x0, holder)` on release. Tools that compute circulating supply from these values need to account for this.
 - **An address at the lock limit** rejects `lock`, `transferWithLock` and `vote` with `Exceeded max lock count`. Calling `releaseLocks()` to clear expired locks makes room again.
 - The `option >= 0` check in `vote` is always true because `option` is a `uint256`. The contract does not validate the option range; do that in the application.
-- There is no audit on record for this repository. Have the contract reviewed before a mainnet deployment.
+- There is no third-party audit on record for this contract. Review it independently before relying on it.
 
 ---
 
