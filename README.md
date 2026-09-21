@@ -22,6 +22,14 @@ The repository contains a single contract, `MetaStockToken`, together with an in
 
 Contract source: [`contracts/MetaStockToken.sol`](contracts/MetaStockToken.sol)
 
+## Deployment
+
+| Network | Address |
+|---|---|
+| TRON Mainnet | [`TVyffgHzP9foW76mGjSDj713D1vuGh16T6`](https://tronscan.org/#/token20/TVyffgHzP9foW76mGjSDj713D1vuGh16T6/code) |
+
+The source verified on Tronscan for this address is identical to `contracts/MetaStockToken.sol` in this repository (compiled with Solidity 0.8.20, optimizer enabled, OpenZeppelin Contracts 5.0.1).
+
 Inherits: `ERC20` · `ERC20Burnable` · `ERC20Pausable` · `Ownable` · `ERC20Permit` · `ReentrancyGuard`
 
 ---
